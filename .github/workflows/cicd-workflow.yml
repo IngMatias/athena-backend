@@ -57,5 +57,5 @@ jobs:
             docker run -d -p 3000:3000 --name $DOCKER_CONTAINER_NAME $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
 
             sleep 5
-            curl --fail http://localhost:3000/ || (echo "❌ Health check failed" && exit 1)
+            curl --fail http://localhost:3000/healthcheck || (echo "❌ Health check failed" && exit 1)
           EOF
