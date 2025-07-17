@@ -1,0 +1,52 @@
+name: CICD
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_HUB_USERNAME: matiashernandez99
+  DOCKER_HUB_REPOSITORY: matiashernandez99/athena-backend
+  DOCKER_HUB_TAG: latest
+  DOCKER_CONTAINER_NAME: athena-backend
+
+jobs:
+  push-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: docker login -u $DOCKER_HUB_USERNAME -p ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
+
+  build-and-deploy:
+    needs: push-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            docker login -u $DOCKER_HUB_USERNAME -p ${{ secrets.DOCKER_HUB_TOKEN }}
+            docker pull $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
+            docker stop $DOCKER_CONTAINER_NAME || true
+            docker rm $DOCKER_CONTAINER_NAME || true
+            docker run -d -p 3000:3000 --name $DOCKER_CONTAINER_NAME $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
+
+            sleep 5
+            curl --fail http://localhost:3000/ || (echo "❌ Health check failed" && exit 1)
+          EOF
