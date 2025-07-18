@@ -84,13 +84,35 @@ jobs:
             docker run -d --name redis -p 6379:6379 redis:latest
           EOF
 
-      - name: Create .env file on EC2
+      - name: Create .env file locally
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
-            cat <<EOT > ~/.env
-              PORT=${{ secrets.PORT }}
-            EOT
-          EOF
+          echo "PORT=${{ secrets.PORT }}" > .env
+          echo "URL_FRONTEND=${{ secrets.URL_FRONTEND }}" >> .env
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "MAX_AGE_TOKEN=${{ secrets.MAX_AGE_TOKEN }}" >> .env
+          echo "URL_AFTER_LOGIN=${{ secrets.URL_AFTER_LOGIN }}" >> .env
+          echo "URL_AFTER_LOGOUT=${{ secrets.URL_AFTER_LOGOUT }}" >> .env
+          echo "CHROMA_HOST=${{ secrets.CHROMA_HOST }}" >> .env
+          echo "CHROMA_PORT=${{ secrets.CHROMA_PORT }}" >> .env
+          echo "MONGO_HOST=${{ secrets.MONGO_HOST }}" >> .env
+          echo "MONGO_PORT=${{ secrets.MONGO_PORT }}" >> .env
+          echo "MONGO_USERNAME=${{ secrets.MONGO_USERNAME }}" >> .env
+          echo "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
+          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
+          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
+          echo "POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_URL=${{ secrets.POSTGRES_URL }}" >> .env
+          echo "URL_REDIS=${{ secrets.URL_REDIS }}" >> .env
+          echo "PORT_REDIS=${{ secrets.PORT_REDIS }}" >> .env
+          echo "PASSWORD_REDIS=${{ secrets.PASSWORD_REDIS }}" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+
+      - name: Copy .env file to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no .env ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:~/.env
 
       - name: Deploy on EC2
         run: |
