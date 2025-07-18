@@ -12,23 +12,7 @@ env:
   DOCKER_CONTAINER_NAME: athena-backend
 
 jobs:
-  push-docker-image:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Login to Docker Hub
-        run: docker login -u $DOCKER_HUB_USERNAME -p ${{ secrets.DOCKER_HUB_TOKEN }}
-
-      - name: Build Docker image
-        run: docker build --build-arg POSTGRES_URL=${{ secrets.POSTGRES_URL }} -t $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG .
-
-      - name: Push Docker image to Docker Hub
-        run: docker push $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
-
-  build-and-deploy:
-    needs: push-docker-image
+  infra:
     runs-on: ubuntu-latest
     steps:
       - name: Setup SSH
@@ -103,6 +87,33 @@ jobs:
             docker rm redis || true
             docker run -d --name redis -p 6379:6379 --network my-network redis:latest redis-server --requirepass ${{ secrets.PASSWORD_REDIS }}
           EOF
+
+  push-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: docker login -u $DOCKER_HUB_USERNAME -p ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build --build-arg POSTGRES_URL=${{ secrets.POSTGRES_URL }} -t $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
+
+  build-and-deploy:
+    needs: push-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s\n" "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Create .env file locally
         run: |
