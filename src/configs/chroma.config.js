@@ -5,4 +5,4 @@ const CHROMA_PORT = process.env.CHROMA_PORT;
 
 const URL_CHROMA = `${CHROMA_HOST}:${CHROMA_PORT}`;
 
-export const client = new ChromaClient({ path: URL_CHROMA });
+export const client = new ChromaClient({ host: CHROMA_HOST, port: CHROMA_PORT });

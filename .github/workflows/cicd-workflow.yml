@@ -48,13 +48,19 @@ jobs:
             sudo usermod -a -G docker ec2-user
           EOF
 
+      - name: Setup Docker Network
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            docker network my-network
+          EOF
+
       - name: Chroma
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
             docker pull chromadb/chroma:latest
             docker stop chroma || true
             docker rm chroma || true
-            docker run -d --name chroma -p 8000:8000 chromadb/chroma:latest
+            docker run -d --name chroma -p 8000:8000 --network my-network chromadb/chroma:latest
           EOF
 
       - name: Mongo
@@ -63,7 +69,7 @@ jobs:
             docker pull mongo:latest
             docker stop mongo || true
             docker rm mongo || true
-            docker run -d --name mongo -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_USERNAME }} -e MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_PASSWORD }} mongo
+            docker run -d --name mongo -p 27017:27017 --network my-network -e MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_USERNAME }} -e MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_PASSWORD }} mongo
           EOF
 
       - name: Postgres
@@ -72,7 +78,7 @@ jobs:
             docker pull postgres:latest
             docker stop postgres || true
             docker rm postgres || true
-            docker run -d --name postgres -p 5432:5432 -e POSTGRES_USER=${{ secrets.POSTGRES_USERNAME }} -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} postgres
+            docker run -d --name postgres -p 5432:5432 --network my-network -e POSTGRES_USER=${{ secrets.POSTGRES_USERNAME }} -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} postgres
           EOF
 
       - name: Redis
@@ -81,7 +87,7 @@ jobs:
             docker pull redis:latest
             docker stop redis || true
             docker rm redis || true
-            docker run -d --name redis -p 6379:6379 redis:latest
+            docker run -d --name redis -p 6379:6379 --network my-network redis:latest
           EOF
 
       - name: Create .env file locally
@@ -121,7 +127,7 @@ jobs:
             docker pull $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
             docker stop $DOCKER_CONTAINER_NAME || true
             docker rm $DOCKER_CONTAINER_NAME || true
-            docker run -d -p 80:3000 --name $DOCKER_CONTAINER_NAME --env-file ~/.env $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
+            docker run -d -p 80:3000 --network my-network --name $DOCKER_CONTAINER_NAME --env-file ~/.env $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
 
             sleep 5
             curl --fail http://localhost/healthcheck || (echo "❌ Health check failed" && exit 1)
