@@ -5,11 +5,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 app.get("/healthcheck", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    uptime: process.uptime(),
-    timestamp: Date.now(),
-  });
+  
 });
 
 app.listen(PORT, () => {

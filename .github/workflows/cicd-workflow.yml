@@ -62,7 +62,7 @@ jobs:
             docker pull mongo:latest
             docker stop mongo || true
             docker rm mongo || true
-            docker run -d --name mongo -p 27017:27017 mongo
+            docker run -d --name mongo -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_USERNAME }} -e MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_PASSWORD }} mongo
           EOF
 
       - name: Postgres
@@ -71,7 +71,7 @@ jobs:
             docker pull postgres:latest
             docker stop postgres || true
             docker rm postgres || true
-            docker run -d --name postgres -p 5432:5432 postgres
+            docker run -d --name postgres -p 5432:5432 -e POSTGRES_USER=${{ secrets.POSTGRES_USERNAME }} -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} postgres
           EOF
 
       - name: Redis
@@ -83,6 +83,16 @@ jobs:
             docker run -d --name redis -p 6379:6379 redis:latest
           EOF
 
+      - name: Create .env file on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            cat <<EOT > ~/.env
+
+              PORT=${{ secrets.PORT }}
+
+            EOT
+          EOF
+
       - name: Deploy on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
@@ -90,7 +100,7 @@ jobs:
             docker pull $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
             docker stop $DOCKER_CONTAINER_NAME || true
             docker rm $DOCKER_CONTAINER_NAME || true
-            docker run -d -p 80:3000 --name $DOCKER_CONTAINER_NAME $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
+            docker run -d -p 80:3000 --name $DOCKER_CONTAINER_NAME --env-file ~/.env $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
 
             sleep 5
             curl --fail http://localhost/healthcheck || (echo "❌ Health check failed" && exit 1)
