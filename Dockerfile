@@ -18,6 +18,7 @@ EXPOSE 3000
 
 # Prisma ORM
 RUN npx prisma generate
+RUN npx prisma db seed
 
 # Comando para correr la aplicación
 CMD ["npm", "start"]
