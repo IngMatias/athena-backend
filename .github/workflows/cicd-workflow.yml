@@ -53,7 +53,7 @@ jobs:
             docker pull chromadb/chroma:latest
             docker stop chroma || true
             docker rm chroma || true
-            docker run -d --name chroma -p 8000:8000 chroma
+            docker run -d --name chroma -p 8000:8000 chromadb/chroma:latest
           EOF
 
       - name: Mongo
