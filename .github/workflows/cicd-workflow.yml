@@ -50,7 +50,7 @@ jobs:
       - name: Chroma
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
-            docker pull chroma:latest
+            docker pull chromadb/chroma:latest
             docker stop chroma || true
             docker rm chroma || true
             docker run -d --name chroma -p 8000:8000 chroma
