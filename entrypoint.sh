@@ -9,4 +9,4 @@ npx prisma migrate dev --name init
 echo "🌱 Ejecutando seed..."
 npx prisma db seed
 
-exec npm run dev
+exec npm run start
