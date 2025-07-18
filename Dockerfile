@@ -17,6 +17,8 @@ COPY . .
 EXPOSE 3000
 
 # Prisma ORM
+ARG POSTGRES_URL
+ENV POSTGRES_URL=${POSTGRES_URL}
 RUN npx prisma generate
 RUN npx prisma db seed
 
