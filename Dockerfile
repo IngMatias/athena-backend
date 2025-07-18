@@ -16,7 +16,8 @@ COPY . .
 # Expone el puerto que usará la app (ajústalo si usas otro)
 EXPOSE 3000
 
-RUN chmod +x /app/db-init.sh
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Comando para correr la aplicación
-CMD ["npm", "start"]
+CMD ["./entrypoint.sh"]
