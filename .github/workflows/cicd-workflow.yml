@@ -92,7 +92,7 @@ jobs:
             docker pull redis:latest
             docker stop redis || true
             docker rm redis || true
-            docker run -d --name redis -p 6379:6379 --network my-network redis:latest
+            docker run -d --name redis -p 6379:6379 --network my-network redis:latest redis-server --requirepass ${{ secrets.PASSWORD_REDIS }}
           EOF
 
       - name: Create .env file locally
