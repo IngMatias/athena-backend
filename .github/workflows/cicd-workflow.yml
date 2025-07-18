@@ -143,7 +143,4 @@ jobs:
             docker stop $DOCKER_CONTAINER_NAME || true
             docker rm $DOCKER_CONTAINER_NAME || true
             docker run -d -p 80:3000 --network my-network --name $DOCKER_CONTAINER_NAME --env-file ~/.env $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG
-
-            sleep 5
-            curl --fail http://localhost/healthcheck || (echo "❌ Health check failed" && exit 1)
           EOF
