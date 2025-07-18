@@ -47,7 +47,16 @@ jobs:
             sudo service docker start
             sudo usermod -a -G docker ec2-user
           EOF
-          
+
+      - name: Clean Docker
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            docker stop $(docker ps -q)
+            docker rm $(docker ps -a -q)
+            docker rmi $(docker images -q)
+            docker system prune -a --volumes -f
+          EOF
+
       - name: Setup Docker Network
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
