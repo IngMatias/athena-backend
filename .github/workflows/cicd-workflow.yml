@@ -23,7 +23,7 @@ jobs:
         run: docker login -u $DOCKER_HUB_USERNAME -p ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG .
+        run: docker build --build-arg POSTGRES_URL=${{ secrets.POSTGRES_URL }} -t $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG .
 
       - name: Push Docker image to Docker Hub
         run: docker push $DOCKER_HUB_REPOSITORY:$DOCKER_HUB_TAG

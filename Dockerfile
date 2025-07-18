@@ -16,6 +16,9 @@ COPY . .
 # Expone el puerto que usará la app (ajústalo si usas otro)
 EXPOSE 3000
 
+ARG POSTGRES_URL
+ENV POSTGRES_URL=${POSTGRES_URL}
+
 RUN npx prisma generate
 RUN npx prisma migrate dev
 RUN npx prisma db seed
