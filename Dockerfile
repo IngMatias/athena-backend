@@ -16,5 +16,8 @@ COPY . .
 # Expone el puerto que usará la app (ajústalo si usas otro)
 EXPOSE 3000
 
+# Prisma ORM
+RUN npx prisma generate
+
 # Comando para correr la aplicación
 CMD ["npm", "start"]
