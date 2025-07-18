@@ -1,8 +1,51 @@
-const express = require("express");
-const app = express();
-const PORT = process.env.PORT || 3000;
+import express from "express";
+import http from "http";
 
-app.use(express.json());
+import cors from "cors";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+
+import routes from "./src/routes/index.js";
+import { initWebSocket } from "./src/websocket/index.js";
+
+import rateLimit from "express-rate-limit";
+import swaggerUi from "swagger-ui-express";
+
+import { swaggerSpec } from "./swagger.js";
+
+const app = express();
+const server = http.createServer(app);
+
+const URL_FRONTEND = process.env.URL_FRONTEND;
+
+app.use(
+  cors({
+    origin: URL_FRONTEND,
+    credentials: true,
+  })
+);
+
+app.use(bodyParser.json());
+
+app.use(cookieParser());
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: "Too many requests from this IP, please try again later.",
+    },
+  })
+);
+
+app.use("/api", routes);
+initWebSocket(server);
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/healthcheck", (req, res) => {
   res.status(200).json({
@@ -12,6 +55,8 @@ app.get("/healthcheck", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+const PORT = process.env.PORT;
+
+server.listen(PORT, () => {
+  console.log("Server running at PORT: ", PORT);
 });
