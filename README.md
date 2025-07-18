@@ -8,4 +8,6 @@ npx prisma migrate dev --name init
 
 npx prisma db seed
 
-docker run -v ./chroma-data:/data -p 8000:8000 chromadb/chroma
+## Conexión ssh al backend
+
+
