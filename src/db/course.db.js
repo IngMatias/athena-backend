@@ -230,3 +230,26 @@ export const getTags = async ({ languageId, pageSize, contains }) => {
     take: pageSize,
   });
 };
+
+export const getEnrollment = async ({ userId, courseId }) => {
+  return await prisma.enrollment.findUnique({
+    where: {
+      userId_courseId: {
+        userId,
+        courseId,
+      },
+    },
+  });
+};
+
+export const postEnrollment = async ({ userId, courseId }) => {
+  console.log("userId", userId);
+  console.log("courseId", courseId);
+
+  return await prisma.enrollment.create({
+    data: {
+      userId,
+      courseId,
+    },
+  });
+};

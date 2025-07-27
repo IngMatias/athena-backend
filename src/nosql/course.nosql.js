@@ -1,5 +1,15 @@
 import { db } from "../configs/mongo.config.js";
 
+export const getSections = async (courseId) => {
+  const collection = db.collection("sections");
+
+  const result = await collection.findOne({ courseId });
+
+  console.log("result", result);
+
+  return result;
+};
+
 export const upsertSections = async (courseId, sections) => {
   const collection = db.collection("sections");
 
@@ -12,6 +22,17 @@ export const upsertSections = async (courseId, sections) => {
   );
 
   return result;
+};
+
+export const getContent = async (courseId, sectionId) => {
+  const collection = db.collection("contents");
+
+  const content = await collection.findOne({ courseId, sectionId });
+
+  console
+  console.log("cont", content);
+
+  return content;
 };
 
 export const upsertContents = async (contents) => {
@@ -39,6 +60,8 @@ export const upsertContents = async (contents) => {
   }));
 
   const result = await collection.bulkWrite(operations);
+
+  console.log("result", result);
 
   return result;
 };

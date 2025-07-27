@@ -29,7 +29,8 @@ model User {
 
   userAnswers UserAnswers?
 
-  courses Course[]
+  courses     Course[]
+  enrollments Enrollment[]
 }
 
 model GoogleUser {
@@ -182,12 +183,13 @@ model EducationLabel {
 
 // Course
 model Course {
-  id            String          @id @default(uuid())
+  id            String             @id @default(uuid())
   createdById   String
-  createdBy     User            @relation(fields: [createdById], references: [id])
-  createdAt     DateTime        @default(now())
+  createdBy     User               @relation(fields: [createdById], references: [id])
+  createdAt     DateTime           @default(now())
   courseDetails CourseDetails[]
   active        Boolean
+  enrollments   Enrollment[]
 }
 
 model CourseDetails {
@@ -236,4 +238,17 @@ model CourseTagCustom {
 
   languageId String
   language   LanguageOption @relation(fields: [languageId], references: [id])
+}
+
+model Enrollment {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+
+  enrolledAt DateTime @default(now())
+
+  @@unique([userId, courseId])
 }

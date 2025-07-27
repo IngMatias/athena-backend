@@ -9,18 +9,39 @@ import {
   postCourseDetailsController,
   delCourseController,
   postCourseContentController,
+  postCourseImageController,
+  getCourseImageController,
+  getCourseSectionsController,
+  postEnrollmentController,
+  getEnrollmentController,
+  getCourseContentController,
 } from "../controllers/course.controller.js";
+
+import { upload } from "../middlewares/file.middleware.js";
 
 const router = Router();
 
 router.post("", authMiddleware, postCourseController);
 router.post("/details", authMiddleware, postCourseDetailsController);
 router.get("/details/:courseId", authMiddleware, getCourseDetailsController);
+router.post(
+  "/image",
+  authMiddleware,
+  upload.single("image"),
+  postCourseImageController
+);
+router.get("/image/:courseId", authMiddleware, getCourseImageController);
 
-router.post("/:courseId", authMiddleware, postCourseContentController );
+router.get("/:courseId/sections", authMiddleware, getCourseSectionsController);
+
+router.get("/:courseId/section/:sectionId", authMiddleware, getCourseContentController)
+router.post("/:courseId", authMiddleware, postCourseContentController);
 
 router.delete("/:courseId", authMiddleware, delCourseController);
 
 router.get("/tag", authMiddleware, getTagsController);
+
+router.get("/:courseId/enrollment", authMiddleware, getEnrollmentController);
+router.post("/:courseId/enrollment", authMiddleware, postEnrollmentController);
 
 export default router;
