@@ -7,8 +7,12 @@ import {
   postEnrollment,
   getEnrollment,
 } from "../db/course.db.js";
+import ExercisesEnum from "../enums/Exercises.enum.js";
 import {
+  getChecks,
   getContent as getContentMongo,
+  getOneContent,
+  postCheck,
   upsertContents,
   upsertSections,
 } from "../nosql/course.nosql.js";
@@ -56,9 +60,17 @@ export const getCourseContentController = async (req, res) => {
   const { id: userId, languageId } = req.user;
   const { courseId, sectionId } = req.params;
 
-  const { content } = await getContentMongo(courseId, sectionId);
+  const content = await getContentMongo(courseId, sectionId);
 
-  res.json({ data: { content } });
+  const contentWithNoAnswer = content.map((c) => {
+    if (c.answer !== undefined) {
+      const { answer, ...noAnser } = c;
+      return noAnser;
+    }
+    return c;
+  });
+
+  res.json({ data: { content: contentWithNoAnswer } });
 };
 
 export const postCourseContentController = async (req, res) => {
@@ -137,7 +149,7 @@ export const postCourseImageController = async (req, res) => {
 
 export const getCourseImageController = async (req, res) => {
   const { id: userId, languageId } = req.user;
-  let { courseId } = req.params;
+  const { courseId } = req.params;
 
   const imagesUrls = await getImagesUrls([courseId]);
 
@@ -146,7 +158,7 @@ export const getCourseImageController = async (req, res) => {
 
 export const getTagsController = async (req, res) => {
   const { languageId } = req.user;
-  let { contains } = req.query;
+  const { contains } = req.query;
 
   const pageSize = 5;
 
@@ -157,22 +169,53 @@ export const getTagsController = async (req, res) => {
 
 export const getEnrollmentController = async (req, res) => {
   const { id: userId, languageId } = req.user;
-  let { courseId } = req.params;
+  const { courseId } = req.params;
 
   const data = await getEnrollment({ userId, courseId });
-
-  console.log("getEnrollmentController", data);
 
   res.json({ data });
 };
 
 export const postEnrollmentController = async (req, res) => {
   const { id: userId, languageId } = req.user;
-  let { courseId } = req.params;
+  const { courseId } = req.params;
 
   const data = await postEnrollment({ userId, courseId });
 
-  console.log("postEnrollmentController", data);
-
   res.json({ data });
+};
+
+export const postAnswerController = async (req, res) => {
+  const { id: userId, languageId } = req.user;
+  const { courseId, sectionId, contentId } = req.params;
+  const { answerTry } = req.body;
+
+  const checksTrue = await getChecks(
+    userId,
+    courseId,
+    sectionId,
+    contentId,
+    true
+  );
+
+  if (checksTrue.length > 0) {
+    res.json({ err: "Already answer correctly" });
+    return;
+  }
+
+  const content = await getOneContent(courseId, sectionId, contentId);
+  const { type, answer } = content;
+
+  let result = content.result;
+
+  if (type === ExercisesEnum.type.TRUE_FALSE) {
+    result = answer === answerTry;
+  } else {
+    res.json({ err: "No implemented exercise check" });
+    return;
+  }
+
+  await postCheck(courseId, sectionId, contentId, userId, result);
+
+  res.json({ data: { result } });
 };

@@ -15,6 +15,7 @@ import {
   postEnrollmentController,
   getEnrollmentController,
   getCourseContentController,
+  postAnswerController,
 } from "../controllers/course.controller.js";
 
 import { upload } from "../middlewares/file.middleware.js";
@@ -43,5 +44,7 @@ router.get("/tag", authMiddleware, getTagsController);
 
 router.get("/:courseId/enrollment", authMiddleware, getEnrollmentController);
 router.post("/:courseId/enrollment", authMiddleware, postEnrollmentController);
+
+router.post("/:courseId/section/:sectionId/content/:contentId", authMiddleware, postAnswerController)
 
 export default router;

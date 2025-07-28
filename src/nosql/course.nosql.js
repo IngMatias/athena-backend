@@ -27,12 +27,24 @@ export const upsertSections = async (courseId, sections) => {
 export const getContent = async (courseId, sectionId) => {
   const collection = db.collection("contents");
 
-  const content = await collection.findOne({ courseId, sectionId });
-
-  console
-  console.log("cont", content);
+  const { content } = await collection.findOne({ courseId, sectionId });
 
   return content;
+};
+
+export const getOneContent = async (courseId, sectionId, contentId) => {
+  const collection = db.collection("contents");
+
+  const { content } = await collection.findOne(
+    {
+      courseId,
+      sectionId,
+      "content.id": contentId,
+    },
+    { projection: { content: { $elemMatch: { id: contentId } } } }
+  );
+
+  return content[0];
 };
 
 export const upsertContents = async (contents) => {
@@ -64,4 +76,48 @@ export const upsertContents = async (contents) => {
   console.log("result", result);
 
   return result;
+};
+
+export const getChecks = async (
+  userId,
+  courseId,
+  sectionId,
+  contentId,
+  result
+) => {
+  const collection = db.collection("checks");
+
+  const query = {
+    userId: { $ne: null },
+    courseId: { $ne: null },
+    sectionId: { $ne: null },
+    contentId: { $ne: null },
+    result: { $ne: null },
+  };
+
+  if (userId !== undefined) query.userId = userId;
+  if (courseId !== undefined) query.courseId = courseId;
+  if (sectionId !== undefined) query.sectionId = sectionId;
+  if (contentId !== undefined) query.contentId = contentId;
+  if (result !== undefined) query.result = result;
+
+  return await collection.find(query).toArray();
+};
+
+export const postCheck = async (
+  userId,
+  courseId,
+  sectionId,
+  contentId,
+  result
+) => {
+  const collection = db.collection("checks");
+
+  return await collection.insertOne({
+    userId,
+    courseId,
+    sectionId,
+    contentId,
+    result,
+  });
 };
