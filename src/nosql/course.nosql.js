@@ -104,11 +104,56 @@ export const getChecks = async (
   return await collection.find(query).toArray();
 };
 
+export const getLatestChecksByContentId = async (
+  userId,
+  courseId,
+  sectionId,
+  contentId,
+  result
+) => {
+  const collection = db.collection("checks");
+
+  const match = {
+    userId: { $ne: null },
+    courseId: { $ne: null },
+    sectionId: { $ne: null },
+    contentId: { $ne: null },
+    result: { $ne: null },
+  };
+
+  if (userId !== undefined) match.userId = userId;
+  if (courseId !== undefined) match.courseId = courseId;
+  if (sectionId !== undefined) match.sectionId = sectionId;
+  if (contentId !== undefined) match.contentId = contentId;
+  if (result !== undefined) match.result = result;
+
+  const results = await collection
+    .aggregate([
+      { $match: match },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$contentId",
+          latestCheck: { $first: "$$ROOT" },
+        },
+      },
+    ])
+    .toArray();
+
+  const checksMap = {};
+  for (const entry of results) {
+    checksMap[entry._id] = entry.latestCheck;
+  }
+
+  return checksMap;
+};
+
 export const postCheck = async (
   userId,
   courseId,
   sectionId,
   contentId,
+  answerTry,
   result
 ) => {
   const collection = db.collection("checks");
@@ -119,5 +164,7 @@ export const postCheck = async (
     sectionId,
     contentId,
     result,
+    answerTry,
+    createdAt: new Date(),
   });
 };

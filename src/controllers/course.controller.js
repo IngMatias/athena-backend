@@ -11,6 +11,7 @@ import ExercisesEnum from "../enums/Exercises.enum.js";
 import {
   getChecks,
   getContent as getContentMongo,
+  getLatestChecksByContentId,
   getOneContent,
   postCheck,
   upsertContents,
@@ -60,17 +61,33 @@ export const getCourseContentController = async (req, res) => {
   const { id: userId, languageId } = req.user;
   const { courseId, sectionId } = req.params;
 
-  const content = await getContentMongo(courseId, sectionId);
+  let content = await getContentMongo(courseId, sectionId);
 
-  const contentWithNoAnswer = content.map((c) => {
-    if (c.answer !== undefined) {
-      const { answer, ...noAnser } = c;
-      return noAnser;
+  const latestChecks = await getLatestChecksByContentId(
+    userId,
+    courseId,
+    sectionId
+  );
+
+  content = content.map((item) => {
+    // Remove answers
+    const { answer, ...noAnswer } = item;
+
+    // Add the latest result
+    const lastCheck = latestChecks[item.id];
+
+    if (lastCheck) {
+      const { answerTry, result } = lastCheck;
+      noAnswer.answer = answerTry;
+      noAnswer.result = result;
     }
-    return c;
+
+    return noAnswer;
   });
 
-  res.json({ data: { content: contentWithNoAnswer } });
+  console.log(content);
+
+  res.json({ data: { content } });
 };
 
 export const postCourseContentController = async (req, res) => {
@@ -215,7 +232,7 @@ export const postAnswerController = async (req, res) => {
     return;
   }
 
-  await postCheck(courseId, sectionId, contentId, userId, result);
+  await postCheck(userId, courseId, sectionId, contentId, answerTry, result);
 
   res.json({ data: { result } });
 };
