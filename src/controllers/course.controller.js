@@ -6,11 +6,13 @@ import {
   delCourse,
   postEnrollment,
   getEnrollment,
+  updateEnrollment,
 } from "../db/course.db.js";
 import ExercisesEnum from "../enums/Exercises.enum.js";
 import {
   getChecks,
   getContent as getContentMongo,
+  getAllCourseContent,
   getLatestChecksByContentId,
   getOneContent,
   postCheck,
@@ -129,11 +131,17 @@ export const getCourseDetailsController = async (req, res) => {
   const { id: userId, languageId } = req.user;
   let { courseId } = req.params;
 
+  console.log("courseId", courseId);
+  console.log("userId", userId);
+  console.log("languageId", languageId);
+
   const data = await getCourseDetails({
     courseId,
     userId,
     languageId,
   });
+
+  console.log("data", data);
 
   res.json({ data });
 };
@@ -236,3 +244,67 @@ export const postAnswerController = async (req, res) => {
 
   res.json({ data: { result } });
 };
+
+export const getCertificateController = async (req, res) => {
+  const { id: userId, languageId } = req.user;
+  const { courseId } = req.params;
+  
+  const enroll = await getEnrollment({ userId, courseId });
+    
+  if (!enroll) {
+      res.json({ err: "User not enrolled to course!" });
+      return;
+  }
+
+  if (enroll.completedAt) {
+      res.json({ err: "Already completed course!" });
+      return;
+  }
+
+  let sections = await getAllCourseContent(courseId);
+
+  const latestChecks = await getLatestChecksByContentId(
+    userId,
+    courseId
+  );
+
+   sections = sections.map((section) => {
+    let content = section.content.map((item) => {
+      const { answer, ...noAnswer } = item;
+      // Add the latest result
+      const lastCheck = latestChecks[item.id];
+
+      if (lastCheck) {
+        const { answerTry, result } = lastCheck;
+        noAnswer.answer = answerTry;
+        noAnswer.result = result;
+      }
+
+      return noAnswer;
+    })
+    section.content = content;
+
+    return section;    
+  });
+ 
+  let uncompleted = {sectionId: undefined, contentId: undefined};
+
+  let courseCompleted = sections.every((section) => {
+    uncompleted.sectionId = section.sectionId;
+    return section.content.every((content) => {
+      uncompleted.contentId = content.id;
+      return !(content.type in ExercisesEnum.type) || (content.type in ExercisesEnum.type && content.result)
+    }
+    )
+  }
+  )
+  
+  if (courseCompleted) {
+    const data = await updateEnrollment({ userId, courseId, completedAt: new Date() });
+
+    res.json({ data });
+  } else {
+    console.log('uncompleted', uncompleted)
+    res.json({ data: uncompleted  });
+  }
+}

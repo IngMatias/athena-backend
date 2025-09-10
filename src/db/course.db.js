@@ -125,10 +125,21 @@ export const getCourses = async ({ contains }) => {
 };
 
 export const getCourseDetails = async ({ userId, courseId, languageId }) => {
-  return await prisma.course.findUnique({
+  return await prisma.course.findFirst({
     where: {
       id: courseId,
-      createdById: userId,
+      OR: [
+      {
+        createdById: userId,
+      },
+      {
+        enrollments: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    ],
     },
     include: {
       courseDetails: {
@@ -253,3 +264,21 @@ export const postEnrollment = async ({ userId, courseId }) => {
     },
   });
 };
+
+export const updateEnrollment = async ({ userId, courseId, completedAt }) => {
+  console.log("userId", userId);
+  console.log("courseId", courseId);
+
+  return await prisma.enrollment.update({
+    where: {
+      userId_courseId: {
+        userId,
+        courseId,
+      },
+    },
+    data: {
+      completedAt,
+    },
+  });
+};
+

@@ -249,6 +249,7 @@ model Enrollment {
   course   Course @relation(fields: [courseId], references: [id])
 
   enrolledAt DateTime @default(now())
+  completedAt DateTime?
 
   @@unique([userId, courseId])
 }

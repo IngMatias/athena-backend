@@ -24,6 +24,14 @@ export const upsertSections = async (courseId, sections) => {
   return result;
 };
 
+export const getAllCourseContent = async (courseId) => {
+  const collection = db.collection("contents");
+
+  const contents = await collection.find({ courseId }).toArray();
+
+  return contents;
+};
+
 export const getContent = async (courseId, sectionId) => {
   const collection = db.collection("contents");
 
