@@ -117,7 +117,7 @@ jobs:
             chmod +x mc
             sudo mv mc /usr/local/bin/
 
-            mc alias set local ${{ secrets.MINIO_HOST }}:${{ secrets.MINIO_PORT }} ${{ secrets.MINIO_USERNAME }} ${{ secrets.MINIO_PASSWORD }}
+            mc alias set local http://localhost:${{ secrets.MINIO_PORT }} ${{ secrets.MINIO_USERNAME }} ${{ secrets.MINIO_PASSWORD }}
             mc mb local/${{ secrets.MINIO_COURSE_IMAGE_BUCKET }}
             mc anonymous set public local/${{ secrets.MINIO_COURSE_IMAGE_BUCKET }}
           EOF
