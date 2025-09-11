@@ -105,6 +105,23 @@ jobs:
             docker run -d --name redis -p 6379:6379 --network my-network redis:latest redis-server --requirepass ${{ secrets.PASSWORD_REDIS }}
           EOF
 
+      - name: MinIO
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            docker pull minio/mc
+            docker stop minio || true
+            docker rm minio || true
+            docker run -d --name minio -p 9000:9000 -p 9001:9001 --network my-network -e MINIO_ROOT_USER=${{ secrets.MINIO_USERNAME }} -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_PASSWORD }} quay.io/minio/minio server /data --console-address ":9001"
+
+            curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+            chmod +x mc
+            sudo mv mc /usr/local/bin/
+
+            mc alias set local ${{ secrets.MINIO_HOST }}:${{ secrets.MINIO_PORT }} ${{ secrets.MINIO_USERNAME }} ${{ secrets.MINIO_PASSWORD }}
+            mc mb local/${{ secrets.MINIO_COURSE_IMAGE_BUCKET }}
+            mc anonymous set public local/${{ secrets.MINIO_COURSE_IMAGE_BUCKET }}
+          EOF
+
       - name: Create .env file locally
         run: |
           echo "PORT=${{ secrets.PORT }}" > .env
@@ -130,6 +147,11 @@ jobs:
           echo "PORT_REDIS=${{ secrets.PORT_REDIS }}" >> .env
           echo "PASSWORD_REDIS=${{ secrets.PASSWORD_REDIS }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "MINIO_HOST=${{ secrets.MINIO_HOST }}" >> .env
+          echo "MINIO_PORT=${{ secrets.MINIO_PORT }}" >> .env
+          echo "MINIO_USERNAME=${{ secrets.MINIO_USERNAME }}" >> .env
+          echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> .env
+          echo "MINIO_COURSE_IMAGE_BUCKET=${{ secrets.MINIO_COURSE_IMAGE_BUCKET }}" >> .env
 
       - name: Copy .env file to EC2
         run: |
