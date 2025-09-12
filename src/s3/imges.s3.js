@@ -1,7 +1,5 @@
 import { s3 } from "../configs/minio.config.js";
 
-const MINIO_HOST = process.env.MINIO_HOST;
-const MINIO_PORT = process.env.MINIO_PORT;
 const MINIO_COURSE_IMAGE_BUCKET = process.env.MINIO_COURSE_IMAGE_BUCKET;
 
 const init = async () => {
