@@ -19,7 +19,7 @@ import {
   upsertContents,
   upsertSections,
 } from "../nosql/course.nosql.js";
-import { getImagesUrls, setImage } from "../s3/imges.s3.js";
+import { getImagesUrls, getStreamImage, setImage } from "../s3/imges.s3.js";
 import { getContent } from "../websocket/content.websocket.js";
 import { getSections } from "../websocket/section.websocket.js";
 
@@ -173,6 +173,25 @@ export const postCourseImageController = async (req, res) => {
 };
 
 export const getCourseImageController = async (req, res) => {
+  const { imageUrl } = req.params;
+
+  const imageStream = getStreamImage(imageUrl);
+
+  // Configuramos headers para que el navegador interprete la respuesta como imagen
+  res.setHeader("Content-Type", "image/jpeg"); // Cambiar según el tipo de imagen
+  res.setHeader("Cache-Control", "public, max-age=31536000"); // Opcional, para cache
+
+  // Pipe del stream al response
+  imageStream.pipe(res);
+
+  // Manejo de errores del stream
+  imageStream.on("error", (err) => {
+    console.error("Error leyendo la imagen", err);
+    res.status(500).send("Error al obtener la imagen");
+  });
+};
+
+export const getCourseImageUrlController = async (req, res) => {
   const { id: userId, languageId } = req.user;
   const { courseId } = req.params;
 
@@ -248,27 +267,24 @@ export const postAnswerController = async (req, res) => {
 export const getCertificateController = async (req, res) => {
   const { id: userId, languageId } = req.user;
   const { courseId } = req.params;
-  
+
   const enroll = await getEnrollment({ userId, courseId });
-    
+
   if (!enroll) {
-      res.json({ err: "User not enrolled to course!" });
-      return;
+    res.json({ err: "User not enrolled to course!" });
+    return;
   }
 
   if (enroll.completedAt) {
-      res.json({ err: "Already completed course!" });
-      return;
+    res.json({ err: "Already completed course!" });
+    return;
   }
 
   let sections = await getAllCourseContent(courseId);
 
-  const latestChecks = await getLatestChecksByContentId(
-    userId,
-    courseId
-  );
+  const latestChecks = await getLatestChecksByContentId(userId, courseId);
 
-   sections = sections.map((section) => {
+  sections = sections.map((section) => {
     let content = section.content.map((item) => {
       const { answer, ...noAnswer } = item;
       // Add the latest result
@@ -281,30 +297,35 @@ export const getCertificateController = async (req, res) => {
       }
 
       return noAnswer;
-    })
+    });
     section.content = content;
 
-    return section;    
+    return section;
   });
- 
-  let uncompleted = {sectionId: undefined, contentId: undefined};
+
+  let uncompleted = { sectionId: undefined, contentId: undefined };
 
   let courseCompleted = sections.every((section) => {
     uncompleted.sectionId = section.sectionId;
     return section.content.every((content) => {
       uncompleted.contentId = content.id;
-      return !(content.type in ExercisesEnum.type) || (content.type in ExercisesEnum.type && content.result)
-    }
-    )
-  }
-  )
-  
+      return (
+        !(content.type in ExercisesEnum.type) ||
+        (content.type in ExercisesEnum.type && content.result)
+      );
+    });
+  });
+
   if (courseCompleted) {
-    const data = await updateEnrollment({ userId, courseId, completedAt: new Date() });
+    const data = await updateEnrollment({
+      userId,
+      courseId,
+      completedAt: new Date(),
+    });
 
     res.json({ data });
   } else {
-    console.log('uncompleted', uncompleted)
-    res.json({ data: uncompleted  });
+    console.log("uncompleted", uncompleted);
+    res.json({ data: uncompleted });
   }
-}
+};

@@ -10,7 +10,7 @@ import {
   delCourseController,
   postCourseContentController,
   postCourseImageController,
-  getCourseImageController,
+  getCourseImageUrlController,
   getCourseSectionsController,
   postEnrollmentController,
   getEnrollmentController,
@@ -32,7 +32,7 @@ router.post(
   upload.single("image"),
   postCourseImageController
 );
-router.get("/image/:courseId", authMiddleware, getCourseImageController);
+router.get("/image/:courseId", authMiddleware, getCourseImageUrlController);
 
 router.get("/:courseId/sections", authMiddleware, getCourseSectionsController);
 

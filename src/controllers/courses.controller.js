@@ -22,8 +22,12 @@ export const getCoursesByUserController = async (req, res) => {
 
   const imagesUrls = await getImagesUrls(data.map(({ id }) => id));
 
+  console.log(imagesUrls);
+
   for (const d of data) {
-    d.imageUrl = imagesUrls[d.id];
+    if (d.courseDetails[0]) {
+      d.courseDetails[0].imageUrl = imagesUrls[d.id];
+    }
   }
   console.log(data);
 

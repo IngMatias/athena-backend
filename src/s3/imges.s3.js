@@ -7,7 +7,6 @@ const MINIO_COURSE_IMAGE_BUCKET = process.env.MINIO_COURSE_IMAGE_BUCKET;
 const init = async () => {
   const bucket = MINIO_COURSE_IMAGE_BUCKET;
   try {
-    console.log("here?");
     await s3.headBucket({ Bucket: bucket }).promise();
   } catch (err) {
     if (err.statusCode === 404) {
@@ -29,7 +28,7 @@ export const getImagesUrls = async (coursesIds) => {
           })
           .promise();
         return {
-          [courseId]: `${MINIO_HOST}:${MINIO_PORT}/${MINIO_COURSE_IMAGE_BUCKET}/${courseId}`,
+          [courseId]: `${MINIO_COURSE_IMAGE_BUCKET}/${courseId}`,
         };
       } catch (error) {
         if (error.code === "NotFound") {
@@ -41,6 +40,15 @@ export const getImagesUrls = async (coursesIds) => {
   );
 
   return Object.assign({}, ...urls);
+};
+
+export const getStreamImage = (courseId) => {
+  return s3
+    .getObject({
+      Bucket: MINIO_COURSE_IMAGE_BUCKET,
+      Key: courseId,
+    })
+    .createReadStream();
 };
 
 export const setImage = async (courseId, image) => {
@@ -56,6 +64,6 @@ export const setImage = async (courseId, image) => {
   await s3.putObject(params).promise();
 
   return {
-    imageUrl: `${MINIO_HOST}:${MINIO_PORT}/${MINIO_COURSE_IMAGE_BUCKET}/${courseId}`,
+    imageUrl: `${MINIO_COURSE_IMAGE_BUCKET}/${courseId}`,
   };
 };
