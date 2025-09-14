@@ -178,7 +178,10 @@ function splitTextByTokens(
       onProgress({
         fileId,
         process: "SPLITTING_FILES",
-        progress: Math.round((completedTokens / totalTokens) * 100),
+        progress: Math.min(
+          100,
+          Math.max(0, Math.round((completedTokens / totalTokens) * 100))
+        ),
       });
     }
   }
