@@ -155,6 +155,8 @@ jobs:
           echo "MINIO_USERNAME=${{ secrets.MINIO_USERNAME }}" >> .env
           echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> .env
           echo "MINIO_COURSE_IMAGE_BUCKET=${{ secrets.MINIO_COURSE_IMAGE_BUCKET }}" >> .env
+          echo "DUMPLINGAI_URL=${{ secrets.DUMPLINGAI_URL }}" >> .env
+          echo "DUMPLINGAI_API_KEY=${{ secrets.DUMPLINGAI_API_KEY }}" >> .env
 
       - name: Copy .env file to EC2
         run: |
