@@ -7,6 +7,7 @@ import {
   delChatDocumentController,
   getChatDocumentsController,
   postChatDocumentController,
+  postChatSelectedDocumentController,
 } from "../controllers/ai.chat.controller.js";
 
 import { upload } from "../middlewares/file.middleware.js";
@@ -15,8 +16,13 @@ const router = Router();
 
 router.post("", authMiddleware, postChatController);
 
-router.post("/documents", authMiddleware, postChatDocumentsController)
-router.get("/document", authMiddleware, getChatDocumentsController);
+router.post("/documents", authMiddleware, postChatDocumentsController);
+router.get("/document/:courseId", authMiddleware, getChatDocumentsController);
+router.post(
+  "/document/selected",
+  authMiddleware,
+  postChatSelectedDocumentController
+);
 
 router.post(
   "/document",

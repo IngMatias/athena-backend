@@ -6,6 +6,11 @@ import {
   queryDocuments,
 } from "../chroma/documents.chroma.js";
 import { getAnswer, getAnswerByContext } from "../services/ai.chat.services.js";
+import {
+  delSelectedDocuments,
+  getSelectedDocuments,
+  upsertSelectedDocument,
+} from "../nosql/document.nosql.js";
 
 export const postChatController = async (req, res) => {
   const { id: userId, languageId } = req.user;
@@ -55,22 +60,28 @@ export const postChatDocumentsController = async (req, res) => {
 
 export const getChatDocumentsController = async (req, res) => {
   const { id: userId, languageId } = req.user;
+  const { courseId } = req.params;
 
   const files = await getDocuments({ userId });
+
+  const selectedDocuments = await getSelectedDocuments(courseId);
+
+  for (let f of files) {
+    f.selected = selectedDocuments.includes(f.id);
+  }
 
   res.json({ data: { files } });
 };
 
 export const postChatDocumentController = async (req, res) => {
   const { id: userId, languageId } = req.user;
+  const { courseId } = req.body;
   const { originalname: fileName, buffer } = req.file;
 
   const content = await readFile(fileName, buffer);
 
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Transfer-Encoding", "chunked");
-
-  console.log(content);
 
   const { fileId } = await postDocument({
     userId,
@@ -81,10 +92,25 @@ export const postChatDocumentController = async (req, res) => {
     },
   });
 
+  await upsertSelectedDocument(courseId, fileId, true);
+
   res.end(
-    JSON.stringify({ process: "FINISHED", progress: 100, fileId, fileName }) +
-      "\n"
+    JSON.stringify({
+      process: "FINISHED",
+      progress: 100,
+      fileId,
+      fileName,
+    }) + "\n"
   );
+};
+
+export const postChatSelectedDocumentController = async (req, res) => {
+  const { id: userId, languageId } = req.user;
+  const { courseId, fileId, selected } = req.body;
+
+  await upsertSelectedDocument(courseId, fileId, selected);
+
+  res.json({ data: { fileId } });
 };
 
 export const delChatDocumentController = async (req, res) => {
@@ -92,6 +118,8 @@ export const delChatDocumentController = async (req, res) => {
   const fileId = req.params.id;
 
   const data = await delDocument({ userId, fileId });
+
+  await delSelectedDocuments(fileId);
 
   res.json({ data });
 };
