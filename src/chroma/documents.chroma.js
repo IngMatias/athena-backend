@@ -3,8 +3,6 @@ import { embeddingFunction } from "../external/chatgpt.external.js";
 import { client } from "../configs/chroma.config.js";
 import { getId } from "../utils/id.util.js";
 
-import { encoding_for_model } from "@dqbd/tiktoken";
-
 export const getDocuments = async ({ userId }) => {
   const collectionName = `${userId}`;
 
@@ -147,7 +145,10 @@ export const queryDocuments = async ({ userId, filesIds, message }) => {
     },
   });
 
-  return { context: results.documents[0], fileNames: results.metadatas[0].map(m => m.fileName) };
+  return {
+    context: results.documents[0],
+    fileNames: results.metadatas[0].map((m) => m.fileName),
+  };
 };
 
 function splitTextByTokens(

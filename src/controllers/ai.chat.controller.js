@@ -63,12 +63,14 @@ export const getChatDocumentsController = async (req, res) => {
 
 export const postChatDocumentController = async (req, res) => {
   const { id: userId, languageId } = req.user;
-  const { originalname: fileName, path: filePath } = req.file;
+  const { originalname: fileName, buffer } = req.file;
 
-  const content = await readFile(fileName, filePath);
+  const content = await readFile(fileName, buffer);
 
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Transfer-Encoding", "chunked");
+
+  console.log(content);
 
   const { fileId } = await postDocument({
     userId,
