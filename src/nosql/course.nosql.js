@@ -35,9 +35,9 @@ export const getAllCourseContent = async (courseId) => {
 export const getContent = async (courseId, sectionId) => {
   const collection = db.collection("contents");
 
-  const { content } = await collection.findOne({ courseId, sectionId });
+  const result = await collection.findOne({ courseId, sectionId });
 
-  return content;
+  return result ? result.content : [];
 };
 
 export const getOneContent = async (courseId, sectionId, contentId) => {
