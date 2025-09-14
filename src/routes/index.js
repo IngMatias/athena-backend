@@ -10,6 +10,7 @@ import aiCourseDetailsRouter from "./ai.course.route.js";
 import aiChatRouter from "./ai.chat.route.js";
 import aiExerciseRouter from "./ai.exercise.route.js";
 import courseImgsRouter from "./courseImgs.route.js";
+import videoRouter from "./video.route.js";
 
 const router = Router();
 
@@ -28,5 +29,7 @@ router.use("/ai/chat", aiChatRouter);
 router.use("/ai/exercise", aiExerciseRouter);
 
 router.use("/course-imgs", courseImgsRouter)
+
+router.use("/video", videoRouter);
 
 export default router;

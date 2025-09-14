@@ -176,3 +176,30 @@ export const postCheck = async (
     createdAt: new Date(),
   });
 };
+
+
+export const getCaptions = async (videoId) => {
+  const collection = db.collection("captions");
+
+  const result = await collection.findOne({ videoId });
+
+  console.log("result", result);
+
+  return result;
+};
+
+export const insertCaptions = async (videoId, captions) => {
+  const collection = db.collection("captions");
+
+  const result = await collection.updateOne(
+    { videoId },
+    {
+      $set: { captions },
+    },
+    { upsert: true }
+  );
+
+  console.log("result", result);
+
+  return result;
+};
