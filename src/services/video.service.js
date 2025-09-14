@@ -1,10 +1,6 @@
-// For xml parsing
-import { parseString } from "xml2js";
-
-import { getCaptionsMessages } from "../prompts/video.prompt.js";
-
-import openaiExternal from "../external/chatgpt.external.js";
 import { timeToSeconds } from "../utils/time.util.js";
+
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 export const isValid = (url) => {
   const regexYoutubeURL =
@@ -26,19 +22,36 @@ export const getVideoId = (url) => {
   }
 };
 
+function extractVideoId(url) {
+  try {
+    const parsedUrl = new URL(url);
+
+    if (parsedUrl.hostname.includes("youtube.com")) {
+      return parsedUrl.searchParams.get("v");
+    }
+
+    if (parsedUrl.hostname === "youtu.be") {
+      return parsedUrl.pathname.slice(1);
+    }
+
+    return null;
+  } catch (err) {
+    console.error("URL inválida:", err);
+    return null;
+  }
+}
+
 export const getInfo = async ({ url }) => {
-  console.log(url);
-  return fetch(url)
-    .then((res) => res.text())
-    .then((html) => {
-      console.log("html", html);
-      const title = html.match(/<title>(.*?)<\/title>/)[1];
-      const description = html
-        .match(/"shortDescription":"(.*?)"/)[1]
-        .replace(/\\n/g, "\n")
-        .replace(/\\"/g, '"');
-      return { title, description };
-    });
+  const videoId = extractVideoId(url);
+
+  const youtubeUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`;
+
+  const res = await fetch(youtubeUrl);
+  const data = await res.json();
+
+  const { title, description } = data.items[0].snippet;
+
+  return { title, description };
 };
 
 export const getCaptions = async ({ url }) => {
