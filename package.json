@@ -41,10 +41,6 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
-<<<<<<< HEAD
-    "youtubei.js": "^15.1.0"
-=======
     "xml2js": "^0.6.2"
->>>>>>> 9b880faaeddc6372bfc87cb2289a9e2a174d1841
   }
 }
