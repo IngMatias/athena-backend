@@ -183,8 +183,6 @@ export const getCaptions = async (videoId) => {
 
   const result = await collection.findOne({ videoId });
 
-  console.log("result", result);
-
   return result;
 };
 
@@ -198,8 +196,6 @@ export const insertCaptions = async (videoId, captions) => {
     },
     { upsert: true }
   );
-
-  console.log("result", result);
 
   return result;
 };

@@ -1,5 +1,5 @@
-import { getInfo, getTranscription, getVideoId, isValid } from "../services/video.service.js";
-import { getCaptions as getMongoCaptions, insertCaptions } from '../nosql/course.nosql.js';
+import { getCaptions as getCaptionsFromAPI, getInfo, getVideoId, isValid } from "../services/video.service.js";
+import { getCaptions as getCaptionsFromMongo, insertCaptions } from '../nosql/course.nosql.js';
 
 export const getVideoController = async (req, res) => {
   try {
@@ -29,12 +29,11 @@ export const getVideoController = async (req, res) => {
 
 export const getVideoCaptionsController = async (req, res) => {
   const { url } = req.body
-  // Required fields
+
   if (!url) {
     return res.status(400).json({ error: "Missing required fields: 'url'." })
   }
 
-  // Format
   if (!isValid(url)) {
     return res.status(400).json({ error: 'Invalid value for field: \'url\'. Expected a YouTube video URL.' })
   }
@@ -42,24 +41,22 @@ export const getVideoCaptionsController = async (req, res) => {
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Transfer-Encoding', 'chunked')
 
-  const mongoCaptions = undefined //await getMongoCaptions(getVideoId(url))
+  const videoId = getVideoId(url);
+  let captionsData = await getCaptionsFromMongo(videoId)
+  let captions = captionsData?.captions
 
-  if (mongoCaptions?.captions) {
-    const chunks = mongoCaptions.captions.split(" ");
+  if (!captions) {
+    captionsData = await getCaptionsFromAPI({ url });
+    captions = JSON.stringify(captionsData);
 
-    for (const chunk of chunks) {
-      res.write(chunk + " ")
-    }
+    insertCaptions(videoId, captions);
+  }
 
-  } else {
-    let transcript = ""
+  const chunks = captions.split(' ')
 
-    for await (const chunk of getTranscription({ url })) {
-      transcript += chunk
-      res.write(chunk)
-    }
-
-    const saved = await insertCaptions(getVideoId(url), transcript)
+  for (const chunk of chunks) {
+    await new Promise(r => setTimeout(r, 50));
+    res.write(chunk + ' ')
   }
 
   res.end()
