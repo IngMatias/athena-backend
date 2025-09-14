@@ -55,6 +55,28 @@ export const addEmptyTextHandler = async (socket, courseId, sectionId, i) => {
   socket.to(`${courseId}-${sectionId}`).emit("add-empty-text", i, id);
 };
 
+const addVideoAt = (oldContent, i, id) => {
+  const newContent = JSON.parse(JSON.stringify(oldContent));
+  newContent.splice(parseInt(i) + 1, 0, {
+    id,
+    type: "VIDEO",
+    text: "",
+  });
+  return newContent;
+};
+
+export const addVideoHandler = async (socket, courseId, sectionId, i) => {
+  let content = await getContent(courseId, sectionId);
+
+  const id = getId();
+  content = addVideoAt(content, i, id);
+
+  await setContent(courseId, sectionId, content);
+
+  socket.emit("add-video", i, id);
+  socket.to(`${courseId}-${sectionId}`).emit("add-video", i, id);
+};
+
 const setContentAt = (oldContent, i, content) => {
   const newContent = JSON.parse(JSON.stringify(oldContent));
   newContent[i] = content;

@@ -6,6 +6,7 @@ import {
   addExerciseAtHandler,
   addKeypointsHandler,
   addMindMapAtHandler,
+  addVideoHandler,
   deleteContentAtHandler,
   elaborateMoreAtHandler,
   joinContentHandler,
@@ -63,6 +64,10 @@ export const initWebSocket = (server) => {
 
     socket.on("add-empty-text", (...params) => {
       addEmptyTextHandler(socket, ...params);
+    });
+
+    socket.on("add-video", (...params) => {
+      addVideoHandler(socket, ...params);
     });
 
     socket.on("set-content-at", (...params) => {
