@@ -20,6 +20,7 @@ import {
   upsertSections,
 } from "../nosql/course.nosql.js";
 import { getImagesUrls, getStreamImage, setImage } from "../s3/imges.s3.js";
+import { assignProgressToTree } from "../utils/progress.util.js";
 import { getContent } from "../websocket/content.websocket.js";
 import { getSections } from "../websocket/section.websocket.js";
 
@@ -54,7 +55,43 @@ export const getCourseSectionsController = async (req, res) => {
   const { id: userId, languageId } = req.user;
   const { courseId } = req.params;
 
-  const sections = await getSections(courseId);
+  let sections = await getSections(courseId);
+
+  let contents = await getAllCourseContent(courseId);
+
+  const latestChecks = await getLatestChecksByContentId(userId, courseId);
+
+  contents = contents.map((section) => {
+    let content = section.content.map((item) => {
+      const { answer, ...noAnswer } = item;
+      // Add the latest result
+      const lastCheck = latestChecks[item.id];
+
+      if (lastCheck) {
+        const { answerTry, result } = lastCheck;
+        noAnswer.answer = answerTry;
+        noAnswer.result = result;
+      }
+
+      return noAnswer;
+    });
+    section.content = content;
+
+    return section;
+  });
+
+  contents = contents.map((section => {
+    const completed = section.content.filter(content => content.type in ExercisesEnum.type && content.result).length;
+    const total = section.content.filter(content => content.type in ExercisesEnum.type ).length;
+    return {...section, completed: completed, total: total}
+  }))
+
+  const contentsMap = contents.reduce((acc, section) => {
+  acc[section.sectionId] = section; // cada sección ya tiene el progress calculado
+  return acc;
+}, {});
+
+  sections = sections.map((s) => assignProgressToTree(s, contentsMap))
 
   res.json({ data: { sections } });
 };

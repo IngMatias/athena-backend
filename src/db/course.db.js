@@ -250,6 +250,9 @@ export const getEnrollment = async ({ userId, courseId }) => {
         courseId,
       },
     },
+  include: {
+    user: true
+  },
   });
 };
 
