@@ -29,18 +29,18 @@ app.use(bodyParser.json());
 
 app.use(cookieParser());
 
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1000,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      status: 429,
-      message: "Too many requests from this IP, please try again later.",
-    },
-  })
-);
+// app.use(
+//   rateLimit({
+//     windowMs: 15 * 60 * 1000,
+//     max: 1000,
+//     standardHeaders: true,
+//     legacyHeaders: false,
+//     message: {
+//       status: 429,
+//       message: "Too many requests from this IP, please try again later.",
+//     },
+//   })
+// );
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
